@@ -1,4 +1,4 @@
-# Local 3GPP SA3 Agentic RAG
+# 3GPP SA3 Agentic RAG (Local)
 
 Local 3GPP SA3 Agentic RAG is a **local-first** research assistant for 3GPP SA3 and telecom-security research (preventing exposure of your ideas to public GPTs). It is designed to ingest official 3GPP specifications and SA3 meeting/TDoc material, preserve source metadata, retrieve evidence, analyze specification gaps, draft SA3-style contribution text, and verify whether generated claims are supported by source documents.
 
