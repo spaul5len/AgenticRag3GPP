@@ -16,7 +16,7 @@ CHAT_MODEL = "llama3.1:8b"
 EMBED_MODEL = "nomic-embed-text"
 
 SPEC_COLLECTION = "official_3gpp_specs"
-MEETING_COLLECTION = "meeting_docs"
+MEETING_COLLECTION = "sa3_meeting_documents"
 
 CHUNK_SIZE_WORDS = 800
 CHUNK_OVERLAP_WORDS = 120
