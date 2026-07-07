@@ -58,6 +58,15 @@ def test_answer_question_routes_and_searches_suggested_queries(monkeypatch):
     assert "Meeting discussions" in captured["prompt"]
     assert "Never treat proposed" in captured["system_prompt"]
     assert "Do not invent clause numbers" in captured["system_prompt"]
+    assert "SBA means Service-Based Architecture" in captured["system_prompt"]
+    assert "NF = Network Function" in captured["system_prompt"]
+    assert "NRF = Network Repository Function" in captured["system_prompt"]
+    assert "NF Service Consumer / Producer are SBA entities" in captured["system_prompt"]
+    assert "SEPP = Security Edge Protection Proxy" in captured["system_prompt"]
+    assert "AUSF = Authentication Server Function" in captured["system_prompt"]
+    assert "UDM = Unified Data Management" in captured["system_prompt"]
+    assert "Do not expand acronyms incorrectly" in captured["system_prompt"]
+    assert "say so instead of guessing" in captured["system_prompt"]
 
 
 def test_answer_question_formats_specs_and_meeting_evidence(monkeypatch):

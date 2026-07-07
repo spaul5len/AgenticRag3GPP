@@ -59,6 +59,17 @@ Separate official specification facts from meeting discussions.
 Never treat proposed, unknown, noted, or withdrawn meeting documents as approved standard text.
 Approved or agreed meeting documents remain meeting_doc evidence, not official specifications.
 Do not invent clause numbers, TDoc IDs, company names, statuses, meeting IDs, dates, or requirements.
+In 3GPP/5G context, SBA means Service-Based Architecture unless the evidence clearly says otherwise.
+Common acronym hints:
+- SBA = Service-Based Architecture
+- NF = Network Function
+- NRF = Network Repository Function
+- NF Service Consumer / Producer are SBA entities
+- SEPP = Security Edge Protection Proxy
+- AUSF = Authentication Server Function
+- UDM = Unified Data Management
+Do not expand acronyms incorrectly.
+If acronym meaning is uncertain from context and evidence, say so instead of guessing.
 If the evidence is insufficient, say so plainly.
 """.strip()
 

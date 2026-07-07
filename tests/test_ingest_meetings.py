@@ -111,15 +111,15 @@ def test_ingest_meetings_dry_run_reads_metadata_and_skips_writes(tmp_path, monke
         ],
     )
 
-    calls = {"add_chunks": 0, "register_document": 0}
+    calls = {"add_chunks_with_stats": 0, "register_document": 0}
     monkeypatch.setattr(config, "CHUNK_SIZE_WORDS", 3)
     monkeypatch.setattr(config, "CHUNK_OVERLAP_WORDS", 1)
     monkeypatch.setattr(config, "SQLITE_PATH", tmp_path / "metadata.sqlite")
     monkeypatch.setattr(
         ingest_meetings,
-        "add_chunks",
+        "add_chunks_with_stats",
         lambda *args, **kwargs: calls.__setitem__(
-            "add_chunks", calls["add_chunks"] + 1
+            "add_chunks_with_stats", calls["add_chunks_with_stats"] + 1
         ),
     )
     monkeypatch.setattr(
@@ -138,10 +138,11 @@ def test_ingest_meetings_dry_run_reads_metadata_and_skips_writes(tmp_path, monke
     assert stats.scanned == 4
     assert stats.indexed == 2
     assert stats.chunks == 3
+    assert stats.chunks_total == 3
     assert stats.skipped_missing == 1
     assert stats.skipped_unsupported == 1
     assert stats.failed == 0
-    assert calls == {"add_chunks": 0, "register_document": 0}
+    assert calls == {"add_chunks_with_stats": 0, "register_document": 0}
     assert not Path(config.SQLITE_PATH).exists()
 
 
@@ -173,8 +174,10 @@ def test_ingest_meetings_writes_chunks_then_registers_document(tmp_path, monkeyp
     monkeypatch.setattr(ingest_meetings.metadata_db, "is_already_indexed", lambda path: False)
     monkeypatch.setattr(ingest_meetings.metadata_db, "file_hash", lambda path: "hash-456")
 
-    def fake_add_chunks(collection_name, chunks, metadata):
-        events.append(("add_chunks", collection_name))
+    from rag.vector_db import ChunkWriteStats
+
+    def fake_add_chunks_with_stats(collection_name, chunks, metadata):
+        events.append(("add_chunks_with_stats", collection_name))
         assert collection_name == "sa3_meeting_documents"
         assert metadata["doc_type"] == "meeting_doc"
         assert metadata["collection_name"] == "sa3_meeting_documents"
@@ -184,7 +187,7 @@ def test_ingest_meetings_writes_chunks_then_registers_document(tmp_path, monkeyp
         assert metadata["related_spec"] == "TS 33.501"
         assert metadata["doc_id"] == "hash-456"
         assert metadata["file_path"] == str(source.resolve())
-        return len(chunks)
+        return ChunkWriteStats(chunks_total=len(chunks), chunks_indexed=len(chunks))
 
     def fake_register_document(path, metadata):
         events.append(("register_document", path))
@@ -193,7 +196,9 @@ def test_ingest_meetings_writes_chunks_then_registers_document(tmp_path, monkeyp
         assert metadata["status"] == "approved"
         return 1
 
-    monkeypatch.setattr(ingest_meetings, "add_chunks", fake_add_chunks)
+    monkeypatch.setattr(
+        ingest_meetings, "add_chunks_with_stats", fake_add_chunks_with_stats
+    )
     monkeypatch.setattr(
         ingest_meetings.metadata_db, "register_document", fake_register_document
     )
@@ -204,8 +209,10 @@ def test_ingest_meetings_writes_chunks_then_registers_document(tmp_path, monkeyp
 
     assert stats.indexed == 1
     assert stats.chunks == 1
+    assert stats.chunks_total == 1
+    assert stats.chunks_failed == 0
     assert events == [
-        ("add_chunks", "sa3_meeting_documents"),
+        ("add_chunks_with_stats", "sa3_meeting_documents"),
         ("register_document", source),
     ]
 

@@ -12,7 +12,7 @@ from rag import config
 from rag import metadata_db
 from rag.chunking import chunk_pages
 from rag.parsers import parse_document
-from rag.vector_db import add_chunks
+from rag.vector_db import add_chunks_with_stats
 
 
 SUPPORTED_SPEC_EXTENSIONS = {".pdf", ".docx", ".txt", ".md"}
@@ -27,6 +27,8 @@ class IngestStats:
     skipped_empty: int = 0
     failed: int = 0
     chunks: int = 0
+    chunks_total: int = 0
+    chunks_failed: int = 0
 
 
 def ingest_specs(specs_dir: Path | None = None, dry_run: bool = False) -> IngestStats:
@@ -72,6 +74,7 @@ def ingest_specs(specs_dir: Path | None = None, dry_run: bool = False) -> Ingest
             if dry_run:
                 stats.indexed += 1
                 stats.chunks += len(chunks)
+                stats.chunks_total += len(chunks)
                 print(f"[dry-run] Would index {path} ({len(chunks)} chunks)")
                 continue
 
@@ -82,11 +85,29 @@ def ingest_specs(specs_dir: Path | None = None, dry_run: bool = False) -> Ingest
                 "file_path": str(path.resolve()),
                 "source": str(path.resolve()),
             }
-            written = add_chunks(config.SPEC_COLLECTION, chunks, vector_metadata)
+            chunk_stats = add_chunks_with_stats(
+                config.SPEC_COLLECTION, chunks, vector_metadata
+            )
+            stats.chunks_total += chunk_stats.chunks_total
+            stats.chunks_failed += chunk_stats.chunks_failed
+            if chunk_stats.chunks_indexed <= 0:
+                stats.failed += 1
+                print(
+                    f"Failed to index {path}: no chunks were embedded successfully "
+                    f"(chunks_total={chunk_stats.chunks_total}, "
+                    f"chunks_failed={chunk_stats.chunks_failed})"
+                )
+                continue
+
             metadata_db.register_document(path, metadata)
             stats.indexed += 1
-            stats.chunks += written
-            print(f"Indexed {path} ({written} chunks)")
+            stats.chunks += chunk_stats.chunks_indexed
+            print(
+                f"Indexed {path} "
+                f"(chunks_total={chunk_stats.chunks_total}, "
+                f"chunks_indexed={chunk_stats.chunks_indexed}, "
+                f"chunks_failed={chunk_stats.chunks_failed})"
+            )
         except Exception as exc:
             stats.failed += 1
             print(f"Failed to index {path}: {exc}")
@@ -151,6 +172,8 @@ def main(argv: list[str] | None = None) -> int:
     print(
         "Spec ingestion complete: "
         f"scanned={stats.scanned}, indexed={stats.indexed}, chunks={stats.chunks}, "
+        f"chunks_total={stats.chunks_total}, chunks_indexed={stats.chunks}, "
+        f"chunks_failed={stats.chunks_failed}, "
         f"skipped_indexed={stats.skipped_indexed}, "
         f"skipped_unsupported={stats.skipped_unsupported}, "
         f"skipped_empty={stats.skipped_empty}, failed={stats.failed}"
