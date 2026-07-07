@@ -15,7 +15,7 @@ OLLAMA_URL = "http://localhost:11434"
 CHAT_MODEL = "llama3.1:8b"
 EMBED_MODEL = "nomic-embed-text"
 
-SPEC_COLLECTION = "official_specs"
+SPEC_COLLECTION = "official_3gpp_specs"
 MEETING_COLLECTION = "meeting_docs"
 
 CHUNK_SIZE_WORDS = 800
