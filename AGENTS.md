@@ -1,154 +1,110 @@
-# Project: Local 3GPP SA3 Agentic RAG
+# Local 3GPP SA3 Agentic RAG - Codex Instructions
 
-## Goal
+## Project purpose
 
-Build a local agentic RAG system for 3GPP SA3/security research.
+This repository implements a local-first Agentic RAG system for 3GPP SA3 and telecom-security research.
 
-The system must support:
-1. Official 3GPP specification ingestion.
-2. 3GPP meeting/TDoc ingestion.
-3. Source-aware retrieval.
-4. Gap analysis.
-5. SA3-style contribution drafting.
-6. Draft verification.
-7. ChatGPT-like Streamlit UI.
-8. Optional FastAPI backend.
-9. Optional 3GPP public file-server sync.
+The system ingests:
+- official 3GPP specifications
+- SA3 meeting documents
+- TDocs
+- metadata
 
-## Runtime architecture
+It supports:
+- evidence-grounded Q&A
+- gap analysis
+- SA3-style drafting
+- verification
+- timeline exploration
+- future figure retrieval
 
-The runtime system must use:
+## Runtime stack
 
 - Ollama for local chat LLM
 - Ollama embedding model
-- Chroma for local vector DB in MVP
-- SQLite for metadata
-- BM25 for keyword search
-- Python for agent logic
-- Streamlit for first GUI
-- FastAPI for API backend
+- Chroma vector database
+- SQLite metadata
+- BM25 keyword search
+- Streamlit GUI
+- optional FastAPI backend
 
-Do not require OpenAI API for the runtime RAG system.
+The runtime RAG system must not require the OpenAI API.
 
-Codex is only used to build and debug the code.
+## Source-trust rules
 
-## Important data rules
+Official specifications and meeting documents must remain separated.
 
-Official specs and meeting documents must be handled separately.
+Official specs are approved sources.
+Meeting/TDoc documents are proposals or discussions unless metadata explicitly says approved or agreed.
 
-Official specs:
-- doc_type = official_spec
-- status = official
+Never invent:
+- clause numbers
+- TDoc IDs
+- company names
+- meeting decisions
+- normative requirements
 
-Meeting documents:
-- doc_type = meeting_doc
-- status can be proposed, noted, agreed, approved, withdrawn, minutes, unknown
-- never treat meeting documents as approved requirements unless metadata explicitly says approved/agreed
+Generated output must separate:
+- official fact
+- meeting discussion
+- proposal
+- inferred gap
+- model inference
 
-Generated summaries:
-- doc_type = generated_summary
-- status = generated_summary
+## 3GPP acronym rules
 
-## Hard rules
+Use these meanings unless evidence clearly says otherwise:
 
-- Do not invent clause numbers.
-- Do not invent TDoc IDs.
-- Do not invent company names.
-- Do not treat meeting proposals as approved standard text.
-- Always preserve source metadata.
-- Every answer should be able to show evidence.
-- Drafting must separate:
-  - official specification facts
-  - meeting discussions
-  - identified gaps
-  - proposed new text
-  - model inference
-- Sensitive files under data/ must not be committed.
-- Do not remove .gitignore protections.
-- Keep the project usable on a normal laptop.
+- SBA = Service-Based Architecture
+- NF = Network Function
+- NRF = Network Repository Function
+- AUSF = Authentication Server Function
+- UDM = Unified Data Management
+- SEAF = Security Anchor Function
+- AMF = Access and Mobility Management Function
+- SUPI = Subscription Permanent Identifier
+- SUCI = Subscription Concealed Identifier
 
-## Desired folder structure
-
-rag/
-  config.py
-  llm.py
-  parsers.py
-  chunking.py
-  metadata_db.py
-  vector_db.py
-  ingest_specs.py
-  ingest_meetings.py
-  keyword_index.py
-  retriever.py
-  router.py
-  pipeline.py
-  gap_agent.py
-  drafting_agent.py
-  verifier_agent.py
-  timeline_agent.py
-  meeting_summary.py
-  sync/
-    __init__.py
-    source_registry.py
-    http_listing.py
-    downloader.py
-    spec_sync.py
-    meeting_sync.py
-    scheduler.py
-
-scripts/
-  index_specs.py
-  index_meetings.py
-  sync_3gpp_specs.py
-  sync_3gpp_meetings.py
-  sync_all_3gpp.py
-
-tests/
-  test_chunking.py
-  test_metadata_db.py
-  test_router.py
-
-app_streamlit.py
-app_fastapi.py
+Do not invent acronym expansions.
 
 ## Commands
 
-Create environment:
+Use these commands from the repository root:
 
-python -m venv .venv
-
-Install dependencies:
-
+Install:
 pip install -r requirements.txt
 
-Index official specs:
+Index specs:
+.venv/bin/python scripts/index_specs.py
 
-python scripts/index_specs.py
+Index meetings:
+.venv/bin/python scripts/index_meetings.py
 
-Index meeting documents:
+Run Streamlit:
+HOME=/tmp .venv/bin/streamlit run app_streamlit.py
 
-python scripts/index_meetings.py
-
-Run Streamlit UI:
-
-streamlit run app_streamlit.py
-
-Run FastAPI backend:
-
-uvicorn app_fastapi:app --reload
+Run FastAPI:
+.venv/bin/uvicorn app_fastapi:app --reload
 
 Run tests:
+PYTHONPATH=. .venv/bin/pytest
 
-pytest
+Compile check:
+.venv/bin/python -m compileall -q rag app_fastapi.py app_streamlit.py scripts
 
-## Done means
+Profile RAG:
+PYTHONPATH=. .venv/bin/python scripts/profile_rag_query.py
 
-A task is done only when:
-1. Code is implemented.
-2. Imports work.
-3. Basic tests pass.
-4. Runtime uses local Ollama.
-5. Data remains ignored by git.
-6. Source metadata is preserved.
-7. Official specs and meeting docs remain clearly separated.
-8. The user can run the described command successfully.
+## Git hygiene
+
+Do not commit:
+- data/
+- chroma_db/
+- metadata.sqlite
+- .venv/
+- __pycache__/
+- .pytest_cache/
+- .env
+
+Before committing, run:
+git status --short
